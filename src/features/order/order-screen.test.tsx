@@ -64,4 +64,63 @@ describe('<OrderScreen />', () => {
       expect(screen.getByText(name)).toBeOnTheScreen();
     }
   });
+
+  describe('cart', () => {
+    // Filtering to the product's category keeps its row rendered (see note above).
+    const available = products.find((product) => product.isAvailable)!;
+    const soldOut = products.find((product) => !product.isAvailable)!;
+    const price = available.price.toFixed(2);
+
+    const showCategoryOf = (product: typeof available) =>
+      fireEvent.press(screen.getByRole('button', { name: categoryLabels[product.category] }));
+
+    it('starts with an empty cart', async () => {
+      await renderOrderScreen();
+
+      expect(screen.getByText('Items: 0 · Total: $0.00')).toBeOnTheScreen();
+      expect(screen.getByRole('button', { name: 'Clear' })).toBeDisabled();
+    });
+
+    it('updates the item count and total when products are added', async () => {
+      await renderOrderScreen();
+      await showCategoryOf(available);
+
+      await fireEvent.press(screen.getByRole('button', { name: `Add ${available.name}` }));
+      expect(screen.getByText(`Items: 1 · Total: $${price}`)).toBeOnTheScreen();
+
+      await fireEvent.press(screen.getByRole('button', { name: `Add ${available.name}` }));
+      expect(
+        screen.getByText(`Items: 2 · Total: $${(available.price * 2).toFixed(2)}`),
+      ).toBeOnTheScreen();
+    });
+
+    it('keeps the cart when the category filter changes', async () => {
+      await renderOrderScreen();
+      await showCategoryOf(available);
+      await fireEvent.press(screen.getByRole('button', { name: `Add ${available.name}` }));
+
+      await fireEvent.press(screen.getByRole('button', { name: 'All' }));
+
+      expect(screen.getByText(`Items: 1 · Total: $${price}`)).toBeOnTheScreen();
+    });
+
+    it('empties the cart when "Clear" is pressed', async () => {
+      await renderOrderScreen();
+      await showCategoryOf(available);
+      await fireEvent.press(screen.getByRole('button', { name: `Add ${available.name}` }));
+
+      await fireEvent.press(screen.getByRole('button', { name: 'Clear' }));
+
+      expect(screen.getByText('Items: 0 · Total: $0.00')).toBeOnTheScreen();
+      expect(screen.getByRole('button', { name: 'Clear' })).toBeDisabled();
+    });
+
+    it('offers no "Add" button for sold-out products', async () => {
+      await renderOrderScreen();
+      await showCategoryOf(soldOut);
+
+      expect(screen.getByText(soldOut.name)).toBeOnTheScreen();
+      expect(screen.queryByRole('button', { name: `Add ${soldOut.name}` })).not.toBeOnTheScreen();
+    });
+  });
 });

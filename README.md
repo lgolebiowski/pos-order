@@ -39,4 +39,11 @@ Category display and filtering are covered at three levels:
 - `src/features/menu/components/category-filter.test.tsx`: filter buttons (labels in order, selected option disabled, `onChange` values).
 - `src/features/order/order-screen.test.tsx`: the order screen, filtering to each category in turn.
 
+The cart is covered the same way:
+
+- `src/features/cart/cart-reducer.test.ts`: add (quantity increases, sold-out ignored), remove (one unit at a time, line dropped at zero), clear, and no mutation of the previous cart.
+- `src/features/cart/totals.test.ts`: item count and total, including cases like `0.1 + 0.2` that would drift without summing in cents.
+- `src/features/cart/components/cart-summary.test.tsx` and `src/features/menu/components/product-row.test.tsx`: summary text, "Clear" and "Add" behaviour, and no "Add" for sold-out items.
+- `src/features/order/order-screen.test.tsx`: adding updates the summary, the cart survives filter changes, and "Clear" empties it.
+
 `SectionList` renders lazily, so the screen tests assert on one category at a time rather than on the full "All" list.
