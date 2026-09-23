@@ -12,3 +12,7 @@ export function getTotal(cart: Cart): number {
   );
   return cents / 100;
 }
+
+export function getQuantity(cart: Cart, productId: string): number {
+  return cart.lines.find((line) => line.product.id === productId)?.quantity ?? 0;
+}

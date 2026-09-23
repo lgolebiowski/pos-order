@@ -4,6 +4,7 @@ import { SectionList, Text, View } from 'react-native';
 import { products } from '@/data/products';
 import { cartReducer, emptyCart } from '@/features/cart/cart-reducer';
 import { CartSummary } from '@/features/cart/components/cart-summary';
+import { getQuantity } from '@/features/cart/totals';
 import { CategoryFilter } from '@/features/menu/components/category-filter';
 import { ProductRow } from '@/features/menu/components/product-row';
 import { groupProductsByCategory } from '@/features/menu/group-products';
@@ -25,8 +26,15 @@ export function OrderScreen() {
         </View>
       }
       renderSectionHeader={({ section }) => <Text accessibilityRole="header">{section.title}</Text>}
+      // SectionList only re-renders rows when its props change, so pass the cart.
+      extraData={cart}
       renderItem={({ item }) => (
-        <ProductRow product={item} onAdd={(product) => dispatch({ type: 'add', product })} />
+        <ProductRow
+          product={item}
+          quantity={getQuantity(cart, item.id)}
+          onAdd={(product) => dispatch({ type: 'add', product })}
+          onRemove={(product) => dispatch({ type: 'remove', productId: product.id })}
+        />
       )}
     />
   );

@@ -94,6 +94,39 @@ describe('<OrderScreen />', () => {
       ).toBeOnTheScreen();
     });
 
+    it('shows the quantity next to the product and changes it with "+" and "−"', async () => {
+      await renderOrderScreen();
+      await showCategoryOf(available);
+      const add = () => fireEvent.press(screen.getByRole('button', { name: `Add ${available.name}` }));
+      const remove = () =>
+        fireEvent.press(screen.getByRole('button', { name: `Remove ${available.name}` }));
+
+      await add();
+      expect(screen.getByLabelText(`1 ${available.name} in cart`)).toBeOnTheScreen();
+
+      await add();
+      await add();
+      expect(screen.getByLabelText(`3 ${available.name} in cart`)).toBeOnTheScreen();
+
+      await remove();
+      expect(screen.getByLabelText(`2 ${available.name} in cart`)).toBeOnTheScreen();
+      expect(
+        screen.getByText(`Items: 2 · Total: $${(available.price * 2).toFixed(2)}`),
+      ).toBeOnTheScreen();
+    });
+
+    it('goes back to "Add" when the last one is removed', async () => {
+      await renderOrderScreen();
+      await showCategoryOf(available);
+
+      await fireEvent.press(screen.getByRole('button', { name: `Add ${available.name}` }));
+      await fireEvent.press(screen.getByRole('button', { name: `Remove ${available.name}` }));
+
+      expect(screen.queryByLabelText(/in cart/)).not.toBeOnTheScreen();
+      expect(screen.getByRole('button', { name: `Add ${available.name}` })).toHaveTextContent('Add');
+      expect(screen.getByText('Items: 0 · Total: $0.00')).toBeOnTheScreen();
+    });
+
     it('keeps the cart when the category filter changes', async () => {
       await renderOrderScreen();
       await showCategoryOf(available);

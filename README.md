@@ -43,7 +43,7 @@ The cart is covered the same way:
 
 - `src/features/cart/cart-reducer.test.ts`: add (quantity increases, sold-out ignored), remove (one unit at a time, line dropped at zero), clear, and no mutation of the previous cart.
 - `src/features/cart/totals.test.ts`: item count and total, including cases like `0.1 + 0.2` that would drift without summing in cents.
-- `src/features/cart/components/cart-summary.test.tsx` and `src/features/menu/components/product-row.test.tsx`: summary text, "Clear" and "Add" behaviour, and no "Add" for sold-out items.
-- `src/features/order/order-screen.test.tsx`: adding updates the summary, the cart survives filter changes, and "Clear" empties it.
+- `src/features/cart/components/cart-summary.test.tsx` and `src/features/menu/components/product-row.test.tsx`: summary text, "Clear", and the product row: "Add" when not in the cart, "−" / quantity / "+" once it is, no buttons for sold-out items.
+- `src/features/order/order-screen.test.tsx`: adding updates the summary, "+" and "−" change the quantity shown next to the product, removing the last one brings back "Add", the cart survives filter changes, and "Clear" empties it.
 
 `SectionList` renders lazily, so the screen tests assert on one category at a time rather than on the full "All" list.
