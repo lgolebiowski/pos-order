@@ -1,10 +1,11 @@
-import { useReducer, useState } from 'react';
-import { SectionList, Text, View } from 'react-native';
+import { router } from 'expo-router';
+import { useState } from 'react';
+import { Button, SectionList, Text, View } from 'react-native';
 
 import { products } from '@/data/products';
-import { cartReducer, emptyCart } from '@/features/cart/cart-reducer';
+import { useCart } from '@/features/cart/cart-context';
 import { CartSummary } from '@/features/cart/components/cart-summary';
-import { getQuantity } from '@/features/cart/totals';
+import { getItemCount, getQuantity } from '@/features/cart/totals';
 import { CategoryFilter } from '@/features/menu/components/category-filter';
 import { ProductRow } from '@/features/menu/components/product-row';
 import { groupProductsByCategory } from '@/features/menu/group-products';
@@ -12,7 +13,7 @@ import type { CategoryFilterValue } from '@/features/menu/types';
 
 export function OrderScreen() {
   const [filter, setFilter] = useState<CategoryFilterValue>('all');
-  const [cart, dispatch] = useReducer(cartReducer, emptyCart);
+  const { cart, dispatch } = useCart();
   const sections = groupProductsByCategory(products, filter);
 
   return (
@@ -22,6 +23,11 @@ export function OrderScreen() {
       ListHeaderComponent={
         <View>
           <CartSummary cart={cart} onClear={() => dispatch({ type: 'clear' })} />
+          <Button
+            title="Review order"
+            disabled={getItemCount(cart) === 0}
+            onPress={() => router.push('/summary')}
+          />
           <CategoryFilter value={filter} onChange={setFilter} />
         </View>
       }

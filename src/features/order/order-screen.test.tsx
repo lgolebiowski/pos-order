@@ -1,6 +1,8 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
+import { router } from 'expo-router';
 
 import { products } from '@/data/products';
+import { CartProvider } from '@/features/cart/cart-context';
 import { categories, categoryLabels } from '@/features/menu/categories';
 import type { ProductCategory } from '@/features/menu/types';
 
@@ -11,7 +13,9 @@ const namesIn = (category: ProductCategory) =>
     .filter((product) => product.category === category)
     .map((product) => product.name);
 
-const renderOrderScreen = () => render(<OrderScreen />);
+jest.mock('expo-router', () => ({ router: { push: jest.fn() } }));
+
+const renderOrderScreen = () => render(<OrderScreen />, { wrapper: CartProvider });
 
 describe('<OrderScreen />', () => {
   it('starts with all categories, beginning with the first section', async () => {
@@ -154,6 +158,22 @@ describe('<OrderScreen />', () => {
 
       expect(screen.getByText(soldOut.name)).toBeOnTheScreen();
       expect(screen.queryByRole('button', { name: `Add ${soldOut.name}` })).not.toBeOnTheScreen();
+    });
+
+    it('disables "Review order" while the cart is empty', async () => {
+      await renderOrderScreen();
+
+      expect(screen.getByRole('button', { name: 'Review order' })).toBeDisabled();
+    });
+
+    it('opens the summary from "Review order" once something is in the cart', async () => {
+      await renderOrderScreen();
+      await showCategoryOf(available);
+      await fireEvent.press(screen.getByRole('button', { name: `Add ${available.name}` }));
+
+      await fireEvent.press(screen.getByRole('button', { name: 'Review order' }));
+
+      expect(router.push).toHaveBeenCalledWith('/summary');
     });
   });
 });

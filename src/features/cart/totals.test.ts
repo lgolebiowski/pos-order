@@ -1,6 +1,6 @@
 import type { Product } from '@/features/menu/types';
 
-import { getItemCount, getQuantity, getTotal } from './totals';
+import { getItemCount, getLineTotal, getQuantity, getTotal } from './totals';
 import type { Cart } from './types';
 
 const line = (price: number, quantity: number) => ({
@@ -53,5 +53,15 @@ describe('getQuantity', () => {
 
   it('returns 0 for a product that is not in the cart', () => {
     expect(getQuantity(cart, 'p-3')).toBe(0);
+  });
+});
+
+describe('getLineTotal', () => {
+  it('multiplies price by quantity', () => {
+    expect(getLineTotal(line(4.5, 2))).toBe(9);
+  });
+
+  it('has no floating-point drift', () => {
+    expect(getLineTotal(line(1.1, 3))).toBe(3.3);
   });
 });

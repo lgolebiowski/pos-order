@@ -46,4 +46,17 @@ The cart is covered the same way:
 - `src/features/cart/components/cart-summary.test.tsx` and `src/features/menu/components/product-row.test.tsx`: summary text, "Clear", and the product row: "Add" when not in the cart, "−" / quantity / "+" once it is, no buttons for sold-out items.
 - `src/features/order/order-screen.test.tsx`: adding updates the summary, "+" and "−" change the quantity shown next to the product, removing the last one brings back "Add", the cart survives filter changes, and "Clear" empties it.
 
+The order summary:
+
+- `src/features/cart/cart-context.test.tsx`: one cart shared by every component inside `CartProvider`, `initialCart`, and a clear error outside the provider.
+- `src/features/order/order-summary-screen.test.tsx`: lines with quantity × price and line totals, item count and total, empty state.
+- `src/features/order/components/order-header-button.test.tsx`: header button label and count, disabled when empty, navigates to `/summary`.
+- `src/features/order/order-flow.test.tsx`: boots the real routes (with the provider and header button from `_layout.tsx`), adds items, and opens the summary from both "Review order" and the header button.
+
 `SectionList` renders lazily, so the screen tests assert on one category at a time rather than on the full "All" list.
+
+## Cart and order summary
+
+The cart lives in `CartProvider` (`src/features/cart/cart-context.tsx`), wrapped around the app in `src/app/_layout.tsx`. Screens read it with `useCart()`, so the order screen (`/order`) and the summary (`/summary`) share the same cart. The state logic is still the plain reducer in `cart-reducer.ts`.
+
+The "Order" button in the order screen's header (`src/features/order/components/order-header-button.tsx`, set as `headerRight` in `_layout.tsx`) and "Review order" in the list both open the summary, which lists each item with quantity × price, its line total, and the order total. Both are disabled while the cart is empty, and the header button shows the item count, e.g. "Order (3)".
