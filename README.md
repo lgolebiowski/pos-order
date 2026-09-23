@@ -7,6 +7,7 @@ npm install
 npm start        # then press i / a / w for iOS / Android / web
 npx expo lint    # lint
 npx tsc --noEmit # typecheck
+npm test         # run tests (npm run test:watch to re-run on change)
 ```
 
 ## Mock product data
@@ -25,3 +26,17 @@ type Product = {
 
 - Prices are in AUD.
 - A few items have `isAvailable: false`, to cover the sold-out state in the UI.
+
+## Tests
+
+Jest (`jest-expo` preset) with React Native Testing Library. Tests sit next to the file they cover, as `<name>.test.ts(x)`.
+
+`src/app/` only holds routes, because Expo Router treats every file there as a screen, so a test file there would become a route. Route files are one-line re-exports of screens that live in `src/features/`, for example `src/app/order.tsx` re-exports `src/features/order/order-screen.tsx`. That way screens are tested beside their code too. Navigation options such as screen titles belong in `src/app/_layout.tsx`.
+
+Category display and filtering are covered at three levels:
+
+- `src/features/menu/group-products.test.ts`: grouping logic (display order, empty categories skipped, filtering, sold-out items kept).
+- `src/features/menu/components/category-filter.test.tsx`: filter buttons (labels in order, selected option disabled, `onChange` values).
+- `src/features/order/order-screen.test.tsx`: the order screen, filtering to each category in turn.
+
+`SectionList` renders lazily, so the screen tests assert on one category at a time rather than on the full "All" list.
