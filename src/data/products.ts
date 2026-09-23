@@ -1,12 +1,4 @@
-export type ProductCategory = 'main' | 'snack' | 'drink' | 'dessert';
-
-export type Product = {
-  id: string;
-  name: string;
-  category: ProductCategory;
-  price: number;
-  isAvailable: boolean;
-};
+import type { Product } from '@/features/menu/types';
 
 export const products: Product[] = [
   // Mains
