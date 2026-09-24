@@ -2,7 +2,6 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 
 import { CartProvider } from '@/features/cart/cart-context';
-import { OrderHeaderButton } from '@/features/order/components/order-header-button';
 import { useThemeColors } from '@/theme/theme';
 
 export default function RootLayout() {
@@ -22,7 +21,7 @@ export default function RootLayout() {
       >
         <Stack.Screen
           name="order"
-          options={{ title: 'Order', headerRight: () => <OrderHeaderButton /> }}
+          options={{ title: 'Order' }}
         />
         <Stack.Screen name="summary" options={{ title: 'Order summary' }} />
       </Stack>

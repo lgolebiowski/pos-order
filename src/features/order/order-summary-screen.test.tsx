@@ -123,7 +123,7 @@ describe('<OrderSummaryScreen />', () => {
       await fireEvent.press(button);
 
       expect(submitOrder).toHaveBeenCalledTimes(1);
-      expect(submitOrder).toHaveBeenCalledWith(cart);
+      expect(submitOrder).toHaveBeenCalledWith(cart, { simulateFailure: false });
     });
 
     it('shows the confirmation and empties the cart on success', async () => {
@@ -189,6 +189,100 @@ describe('<OrderSummaryScreen />', () => {
       expect(await screen.findByText('Order placed!')).toBeOnTheScreen();
       expect(screen.queryByRole('alert')).not.toBeOnTheScreen();
       expect(submitOrder).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('"Simulate failed request" toggle', () => {
+    const toggle = () => screen.getByRole('switch', { name: 'Simulate failed request' });
+
+    it('is off by default, with the normal submit button', async () => {
+      await renderSummary(cart);
+
+      expect(toggle()).not.toBeChecked();
+      expect(screen.getByRole('button', { name: 'Submit order' })).toHaveStyle({
+        backgroundColor: '#18181b',
+      });
+    });
+
+    it('turns the button into a red "Submit order failed" button when on', async () => {
+      await renderSummary(cart);
+
+      await fireEvent(toggle(), 'valueChange', true);
+
+      expect(toggle()).toBeChecked();
+      expect(screen.queryByRole('button', { name: 'Submit order' })).not.toBeOnTheScreen();
+      expect(screen.getByRole('button', { name: 'Submit order failed' })).toHaveStyle({
+        backgroundColor: '#dc2626',
+      });
+    });
+
+    it('asks the API to fail and shows the error state', async () => {
+      jest.mocked(submitOrder).mockRejectedValue(new Error('The canteen system did not respond.'));
+      await renderSummary(cart);
+
+      await fireEvent(toggle(), 'valueChange', true);
+      await fireEvent.press(screen.getByRole('button', { name: 'Submit order failed' }));
+
+      expect(submitOrder).toHaveBeenCalledWith(cart, { simulateFailure: true });
+      expect(await screen.findByRole('alert')).toHaveTextContent(/Couldn't submit your order/);
+      expect(screen.getByText('Apple')).toBeOnTheScreen();
+    });
+
+    it('removes the error when turned off after a failure', async () => {
+      jest.mocked(submitOrder).mockRejectedValueOnce(new Error('The canteen system did not respond.'));
+      await renderSummary(cart);
+      await fireEvent(toggle(), 'valueChange', true);
+      await fireEvent.press(screen.getByRole('button', { name: 'Submit order failed' }));
+      await screen.findByRole('alert');
+
+      await fireEvent(toggle(), 'valueChange', false);
+
+      expect(screen.queryByRole('alert')).not.toBeOnTheScreen();
+      expect(screen.queryByRole('button', { name: 'Try again' })).not.toBeOnTheScreen();
+      expect(screen.getByRole('button', { name: 'Submit order' })).toHaveStyle({
+        backgroundColor: '#18181b',
+      });
+      expect(screen.getByText('Apple')).toBeOnTheScreen();
+    });
+
+    it('submits normally after being turned off', async () => {
+      jest
+        .mocked(submitOrder)
+        .mockRejectedValueOnce(new Error('The canteen system did not respond.'))
+        .mockResolvedValueOnce(confirmation);
+      await renderSummary(cart);
+      await fireEvent(toggle(), 'valueChange', true);
+      await fireEvent.press(screen.getByRole('button', { name: 'Submit order failed' }));
+      await screen.findByRole('alert');
+
+      await fireEvent(toggle(), 'valueChange', false);
+      await pressSubmit();
+
+      expect(submitOrder).toHaveBeenLastCalledWith(cart, { simulateFailure: false });
+      expect(await screen.findByText('Order placed!')).toBeOnTheScreen();
+    });
+
+    it('does not bring the error back when turned on again', async () => {
+      jest.mocked(submitOrder).mockRejectedValueOnce(new Error('The canteen system did not respond.'));
+      await renderSummary(cart);
+      await fireEvent(toggle(), 'valueChange', true);
+      await fireEvent.press(screen.getByRole('button', { name: 'Submit order failed' }));
+      await screen.findByRole('alert');
+
+      await fireEvent(toggle(), 'valueChange', false);
+      await fireEvent(toggle(), 'valueChange', true);
+
+      expect(screen.queryByRole('alert')).not.toBeOnTheScreen();
+      expect(screen.getByRole('button', { name: 'Submit order failed' })).toBeOnTheScreen();
+    });
+
+    it('is disabled while a request is in flight', async () => {
+      jest.mocked(submitOrder).mockReturnValue(deferred<OrderConfirmation>().promise);
+      await renderSummary(cart);
+
+      await pressSubmit();
+
+      expect(toggle()).toBeDisabled();
     });
   });
 });

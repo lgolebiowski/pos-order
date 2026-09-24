@@ -23,6 +23,8 @@ const lightColors = {
   primary: zinc[900],
   onPrimary: zinc[50],
   danger: '#dc2626',
+  dangerFill: '#dc2626',
+  onDanger: '#ffffff',
 };
 
 const darkColors: typeof lightColors = {
@@ -35,6 +37,8 @@ const darkColors: typeof lightColors = {
   primary: zinc[50],
   onPrimary: zinc[900],
   danger: '#f87171',
+  dangerFill: '#dc2626',
+  onDanger: '#ffffff',
 };
 
 export type ThemeColors = typeof lightColors;

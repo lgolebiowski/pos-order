@@ -2,7 +2,7 @@ import { Pressable, StyleSheet, Text, type PressableProps } from 'react-native';
 
 import { fontSize, radius, spacing, useThemeColors } from '@/theme/theme';
 
-type ButtonVariant = 'primary' | 'secondary' | 'ghost';
+type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
 type ButtonSize = 'sm' | 'md';
 
 type Props = Omit<PressableProps, 'children' | 'style'> & {
@@ -26,8 +26,14 @@ export function Button({
     primary: { backgroundColor: colors.primary, borderColor: colors.primary },
     secondary: { backgroundColor: 'transparent', borderColor: colors.border },
     ghost: { backgroundColor: 'transparent', borderColor: 'transparent' },
+    danger: { backgroundColor: colors.dangerFill, borderColor: colors.dangerFill },
   }[variant];
-  const textColor = variant === 'primary' ? colors.onPrimary : colors.foreground;
+  const textColor = {
+    primary: colors.onPrimary,
+    secondary: colors.foreground,
+    ghost: colors.foreground,
+    danger: colors.onDanger,
+  }[variant];
 
   return (
     <Pressable

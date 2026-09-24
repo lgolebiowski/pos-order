@@ -15,13 +15,13 @@ export function useSubmitOrder() {
   const [state, setState] = useState<SubmitOrderState>({ status: 'idle' });
   const inFlight = useRef(false);
 
-  async function submit() {
+  async function submit({ simulateFailure = false }: { simulateFailure?: boolean } = {}) {
     if (inFlight.current || cart.lines.length === 0) return;
 
     inFlight.current = true;
     setState({ status: 'submitting' });
     try {
-      const confirmation = await submitOrder(cart);
+      const confirmation = await submitOrder(cart, { simulateFailure });
       dispatch({ type: 'clear' });
       setState({ status: 'success', confirmation });
     } catch (error) {
@@ -33,5 +33,10 @@ export function useSubmitOrder() {
     }
   }
 
-  return { state, submit };
+  /** Clears a previous error so the screen shows the normal submit state again. */
+  function reset() {
+    if (!inFlight.current) setState({ status: 'idle' });
+  }
+
+  return { state, submit, reset };
 }

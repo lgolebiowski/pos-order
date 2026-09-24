@@ -27,6 +27,19 @@ describe('submitOrder (mock API)', () => {
     });
   });
 
+  it('fails after the delay when simulateFailure is set', async () => {
+    const onSettled = jest.fn();
+    const request = submitOrder(cart, { delayMs: 1000, simulateFailure: true });
+    request.catch(onSettled);
+
+    await jest.advanceTimersByTimeAsync(999);
+    expect(onSettled).not.toHaveBeenCalled();
+
+    const assertion = expect(request).rejects.toThrow('The canteen system did not respond.');
+    await jest.advanceTimersByTimeAsync(1);
+    await assertion;
+  });
+
   it('rejects an empty order straight away, without waiting', async () => {
     await expect(submitOrder({ lines: [] }, { delayMs: 1000 })).rejects.toThrow(
       'Cannot submit an empty order.',

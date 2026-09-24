@@ -74,6 +74,16 @@ describe('<Button />', () => {
     });
   });
 
+  it('danger is filled red with white text, in light and dark mode', async () => {
+    for (const scheme of ['light', 'dark'] as const) {
+      mockColorScheme.mockReturnValue(scheme);
+      await render(<Button title="Delete" variant="danger" />);
+
+      expect(screen.getByRole('button')).toHaveStyle({ backgroundColor: '#dc2626' });
+      expect(screen.getByText('Delete')).toHaveStyle({ color: '#ffffff' });
+    }
+  });
+
   it('inverts the primary colours in dark mode', async () => {
     mockColorScheme.mockReturnValue('dark');
     await render(<Button title="Save" variant="primary" />);

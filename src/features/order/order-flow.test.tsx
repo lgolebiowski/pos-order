@@ -34,27 +34,6 @@ describe('order → summary flow', () => {
     ).toBeOnTheScreen();
   });
 
-  it('opens the summary from the "Order" button in the header', async () => {
-    await renderRouter('./src/app', { initialUrl: '/order' });
-
-    await fireEvent.press(
-      screen.getByRole('button', { name: categoryLabels[available.category] }),
-    );
-    await fireEvent.press(
-      screen.getByRole('button', { name: `Add ${available.name}` }),
-    );
-
-    const headerButton = screen.getByRole('button', {
-      name: 'View order, 1 item',
-    });
-    expect(headerButton).toHaveTextContent('Order (1)');
-    await fireEvent.press(headerButton);
-
-    expect(
-      await screen.findByText(`1 × $${available.price.toFixed(2)}`),
-    ).toBeOnTheScreen();
-  });
-
   it('submits the order and starts a new one with an empty cart', async () => {
     jest.mocked(submitOrder).mockResolvedValue({
       orderId: 'ORD-FLOW1',
@@ -70,9 +49,7 @@ describe('order → summary flow', () => {
     await fireEvent.press(
       screen.getByRole('button', { name: `Add ${available.name}` }),
     );
-    await fireEvent.press(
-      screen.getByRole('button', { name: 'View order, 1 item' }),
-    );
+    await fireEvent.press(screen.getByRole('button', { name: 'Review order' }));
     await fireEvent.press(
       await screen.findByRole('button', { name: 'Submit order' }),
     );
@@ -88,8 +65,6 @@ describe('order → summary flow', () => {
     expect(
       await screen.findByText('Items: 0 · Total: $0.00'),
     ).toBeOnTheScreen();
-    expect(
-      screen.getByRole('button', { name: 'View order, 0 items' }),
-    ).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Review order' })).toBeDisabled();
   });
 });

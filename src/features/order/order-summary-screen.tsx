@@ -1,5 +1,6 @@
 import { router } from 'expo-router';
-import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { ActivityIndicator, FlatList, StyleSheet, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/ui/button';
@@ -14,7 +15,8 @@ const backToMenu = () => router.dismissTo('/order');
 export function OrderSummaryScreen() {
   const colors = useThemeColors();
   const { cart } = useCart();
-  const { state, submit } = useSubmitOrder();
+  const { state, submit, reset } = useSubmitOrder();
+  const [simulateFailure, setSimulateFailure] = useState(false);
 
   if (state.status === 'success') {
     const { confirmation } = state;
@@ -55,6 +57,12 @@ export function OrderSummaryScreen() {
   }
 
   const isSubmitting = state.status === 'submitting';
+
+  function toggleSimulateFailure(value: boolean) {
+    setSimulateFailure(value);
+    // The error came from the simulated failure; switching it off dismisses it.
+    if (!value && state.status === 'error') reset();
+  }
 
   return (
     <View style={[styles.screen, { backgroundColor: colors.background }]}>
@@ -113,12 +121,33 @@ export function OrderSummaryScreen() {
           </View>
         ) : null}
 
+        <View style={styles.toggle}>
+          <Text style={[styles.toggleLabel, { color: colors.foreground }]}>
+            Simulate failed request
+          </Text>
+          <Switch
+            accessibilityLabel="Simulate failed request"
+            value={simulateFailure}
+            onValueChange={toggleSimulateFailure}
+            disabled={isSubmitting}
+            // iOS passes `disabled` straight to the native switch; state it for accessibility too.
+            accessibilityState={{ disabled: isSubmitting, checked: simulateFailure }}
+            trackColor={{ true: colors.dangerFill }}
+          />
+        </View>
+
         <Button
-          title={state.status === 'error' ? 'Try again' : 'Submit order'}
-          variant="primary"
+          title={
+            simulateFailure
+              ? 'Submit order failed'
+              : state.status === 'error'
+                ? 'Try again'
+                : 'Submit order'
+          }
+          variant={simulateFailure ? 'danger' : 'primary'}
           fullWidth
           disabled={isSubmitting}
-          onPress={() => void submit()}
+          onPress={() => void submit({ simulateFailure })}
         />
       </SafeAreaView>
     </View>
@@ -215,5 +244,15 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: fontSize.sm,
+  },
+  toggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.md,
+  },
+  toggleLabel: {
+    fontSize: fontSize.sm,
+    fontWeight: '500',
   },
 });

@@ -61,4 +61,42 @@ describe('useSubmitOrder', () => {
     });
     expect(submitOrder).toHaveBeenCalledTimes(2);
   });
+
+  it('passes simulateFailure through to the API', async () => {
+    jest.mocked(submitOrder).mockRejectedValueOnce(new Error('Nope.'));
+    const { result } = await renderHook(() => useSubmitOrder(), {
+      wrapper: withCart({ lines: [{ product: apple, quantity: 1 }] }),
+    });
+
+    await act(() => result.current.submit({ simulateFailure: true }));
+
+    expect(submitOrder).toHaveBeenCalledWith(expect.anything(), { simulateFailure: true });
+    expect(result.current.state).toEqual({ status: 'error', message: 'Nope.' });
+  });
+
+  it('reset clears an error back to idle', async () => {
+    jest.mocked(submitOrder).mockRejectedValueOnce(new Error('Nope.'));
+    const { result } = await renderHook(() => useSubmitOrder(), {
+      wrapper: withCart({ lines: [{ product: apple, quantity: 1 }] }),
+    });
+    await act(() => result.current.submit());
+
+    await act(async () => result.current.reset());
+
+    expect(result.current.state).toEqual({ status: 'idle' });
+  });
+
+  it('reset does not interrupt a request in flight', async () => {
+    jest.mocked(submitOrder).mockReturnValue(new Promise(() => {}));
+    const { result } = await renderHook(() => useSubmitOrder(), {
+      wrapper: withCart({ lines: [{ product: apple, quantity: 1 }] }),
+    });
+    await act(async () => {
+      void result.current.submit();
+    });
+
+    await act(async () => result.current.reset());
+
+    expect(result.current.state).toEqual({ status: 'submitting' });
+  });
 });
