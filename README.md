@@ -49,9 +49,11 @@ The cart is covered the same way:
 The order summary:
 
 - `src/features/cart/cart-context.test.tsx`: one cart shared by every component inside `CartProvider`, `initialCart`, and a clear error outside the provider.
-- `src/features/order/order-summary-screen.test.tsx`: lines with quantity × price and line totals, item count and total, empty state.
+- `src/features/order/order-summary-screen.test.tsx`: lines with quantity × price and line totals, item count and total, and every submit state (empty, loading, success, error, retry). The API is mocked with a promise the test settles by hand, so the loading state can be checked mid-request.
+- `src/features/order/submit-order.test.ts`: the mock API's delay and empty-order rejection, using fake timers.
+- `src/features/order/use-submit-order.test.tsx`: the submit hook, including a double tap that arrives before the button re-renders as disabled.
 - `src/features/order/components/order-header-button.test.tsx`: header button label and count, disabled when empty, navigates to `/summary`.
-- `src/features/order/order-flow.test.tsx`: boots the real routes (with the provider and header button from `_layout.tsx`), adds items, and opens the summary from both "Review order" and the header button.
+- `src/features/order/order-flow.test.tsx`: boots the real routes (with the provider and header button from `_layout.tsx`), adds items, opens the summary from both "Review order" and the header button, submits, and starts a new order.
 
 `SectionList` renders lazily, so the screen tests assert on one category at a time rather than on the full "All" list.
 
@@ -60,3 +62,17 @@ The order summary:
 The cart lives in `CartProvider` (`src/features/cart/cart-context.tsx`), wrapped around the app in `src/app/_layout.tsx`. Screens read it with `useCart()`, so the order screen (`/order`) and the summary (`/summary`) share the same cart. The state logic is still the plain reducer in `cart-reducer.ts`.
 
 The "Order" button in the order screen's header (`src/features/order/components/order-header-button.tsx`, set as `headerRight` in `_layout.tsx`) and "Review order" in the list both open the summary, which lists each item with quantity × price, its line total, and the order total. Both are disabled while the cart is empty, and the header button shows the item count, e.g. "Order (3)".
+
+## Submitting an order
+
+`submitOrder` (`src/features/order/submit-order.ts`) is a mocked API: it waits about 1.5 s, then returns a confirmation. It rejects an empty order. `useSubmitOrder` (`use-submit-order.ts`) tracks `idle → submitting → success | error`, blocks a second submit while one is in flight, and clears the cart only on success.
+
+The summary screen shows:
+
+| State | Shows |
+|---|---|
+| Empty | "Your order is empty." and "Back to menu". No submit button. |
+| Ready | Items, totals, "Submit order". |
+| Loading | Spinner, "Submitting your order…", button disabled. |
+| Error | The failure message as an accessibility alert, items kept, "Try again". |
+| Success | "Order placed!", order number and total, "Start new order" (back to the menu with an empty cart). |
