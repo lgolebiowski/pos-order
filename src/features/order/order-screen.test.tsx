@@ -21,7 +21,7 @@ describe('<OrderScreen />', () => {
   it('starts with all categories, beginning with the first section', async () => {
     await renderOrderScreen();
 
-    expect(screen.getByRole('button', { name: 'All' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'All' })).toBeSelected();
     expect(screen.getAllByRole('header')[0]).toHaveTextContent(
       categoryLabels[categories[0]],
     );
@@ -60,7 +60,7 @@ describe('<OrderScreen />', () => {
     await fireEvent.press(screen.getByRole('button', { name: 'Desserts' }));
     await fireEvent.press(screen.getByRole('button', { name: 'All' }));
 
-    expect(screen.getByRole('button', { name: 'All' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'All' })).toBeSelected();
     expect(screen.getAllByRole('header')[0]).toHaveTextContent(
       categoryLabels[categories[0]],
     );

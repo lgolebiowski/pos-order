@@ -78,7 +78,7 @@ describe('order → summary flow', () => {
     );
 
     expect(
-      await screen.findByText('Order number: ORD-FLOW1'),
+      await screen.findByText('ORD-FLOW1'),
     ).toBeOnTheScreen();
 
     await fireEvent.press(

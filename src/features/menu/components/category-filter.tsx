@@ -1,4 +1,7 @@
-import { Button, View } from 'react-native';
+import { ScrollView, StyleSheet } from 'react-native';
+
+import { Chip } from '@/components/ui/chip';
+import { spacing } from '@/theme/theme';
 
 import { categories, categoryLabels } from '../categories';
 import type { CategoryFilterValue } from '../types';
@@ -10,16 +13,28 @@ type Props = {
 
 export function CategoryFilter({ value, onChange }: Props) {
   return (
-    <View>
-      <Button title="All" disabled={value === 'all'} onPress={() => onChange('all')} />
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={styles.row}
+    >
+      <Chip label="All" selected={value === 'all'} onPress={() => onChange('all')} />
       {categories.map((category) => (
-        <Button
+        <Chip
           key={category}
-          title={categoryLabels[category]}
-          disabled={value === category}
+          label={categoryLabels[category]}
+          selected={value === category}
           onPress={() => onChange(category)}
         />
       ))}
-    </View>
+    </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  row: {
+    gap: spacing.sm,
+    paddingHorizontal: spacing.page,
+    paddingVertical: spacing.md,
+  },
+});

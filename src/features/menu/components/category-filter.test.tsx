@@ -12,12 +12,12 @@ describe('<CategoryFilter />', () => {
     expect(labels).toEqual(['All', 'Mains', 'Snacks', 'Drinks', 'Desserts']);
   });
 
-  it('disables the selected option only', async () => {
+  it('marks only the current option as selected', async () => {
     await render(<CategoryFilter value="drink" onChange={jest.fn()} />);
 
-    expect(screen.getByRole('button', { name: 'Drinks' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Drinks' })).toBeSelected();
     for (const name of ['All', 'Mains', 'Snacks', 'Desserts']) {
-      expect(screen.getByRole('button', { name })).toBeEnabled();
+      expect(screen.getByRole('button', { name })).not.toBeSelected();
     }
   });
 

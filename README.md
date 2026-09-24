@@ -55,6 +55,11 @@ The order summary:
 - `src/features/order/components/order-header-button.test.tsx`: header button label and count, disabled when empty, navigates to `/summary`.
 - `src/features/order/order-flow.test.tsx`: boots the real routes (with the provider and header button from `_layout.tsx`), adds items, opens the summary from both "Review order" and the header button, submits, and starts a new order.
 
+Shared UI components:
+
+- `src/components/ui/button.test.tsx`: accessible name (title or `accessibilityLabel`), press and disabled behaviour, the primary / secondary / ghost colours in light and dark mode, and sizes.
+- `src/components/ui/chip.test.tsx`: selected state exposed to accessibility tools, presses, and selected / unselected colours in light and dark mode.
+
 `SectionList` renders lazily, so the screen tests assert on one category at a time rather than on the full "All" list.
 
 ## Cart and order summary

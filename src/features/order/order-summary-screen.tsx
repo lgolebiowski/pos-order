@@ -1,38 +1,55 @@
 import { router } from 'expo-router';
-import { ActivityIndicator, Button, FlatList, Text, View } from 'react-native';
+import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Button } from '@/components/ui/button';
 import { useCart } from '@/features/cart/cart-context';
 import { getItemCount, getLineTotal, getTotal } from '@/features/cart/totals';
+import { fontSize, spacing, useThemeColors } from '@/theme/theme';
 
 import { useSubmitOrder } from './use-submit-order';
 
 const backToMenu = () => router.dismissTo('/order');
 
 export function OrderSummaryScreen() {
+  const colors = useThemeColors();
   const { cart } = useCart();
   const { state, submit } = useSubmitOrder();
 
   if (state.status === 'success') {
     const { confirmation } = state;
     return (
-      <View>
-        <Text accessibilityRole="header">Order placed!</Text>
-        <Text>Order number: {confirmation.orderId}</Text>
-        <Text>
-          {confirmation.itemCount} {confirmation.itemCount === 1 ? 'item' : 'items'} · Total: $
-          {confirmation.total.toFixed(2)}
+      <View style={[styles.page, { backgroundColor: colors.background }]}>
+        <Text accessibilityRole="header" style={[styles.title, { color: colors.foreground }]}>
+          Order placed!
         </Text>
-        <Button title="Start new order" onPress={backToMenu} />
+        <Text style={[styles.description, { color: colors.muted }]}>
+          Thanks, the canteen has your order.
+        </Text>
+
+        <View style={styles.details}>
+          <Text style={[styles.label, { color: colors.muted }]}>Order number</Text>
+          <Text style={[styles.value, { color: colors.foreground }]}>{confirmation.orderId}</Text>
+          <Text style={[styles.label, { color: colors.muted }]}>Total</Text>
+          <Text style={[styles.value, { color: colors.foreground }]}>
+            ${confirmation.total.toFixed(2)} · {confirmation.itemCount}{' '}
+            {confirmation.itemCount === 1 ? 'item' : 'items'}
+          </Text>
+        </View>
+
+        <Button title="Start new order" variant="primary" fullWidth onPress={backToMenu} />
       </View>
     );
   }
 
   if (cart.lines.length === 0) {
     return (
-      <View>
-        <Text>Your order is empty.</Text>
-        <Text>Add something from the menu first.</Text>
-        <Button title="Back to menu" onPress={backToMenu} />
+      <View style={[styles.page, { backgroundColor: colors.background }]}>
+        <Text style={[styles.title, { color: colors.foreground }]}>Your order is empty.</Text>
+        <Text style={[styles.description, { color: colors.muted }]}>
+          Add something from the menu first.
+        </Text>
+        <Button title="Back to menu" variant="primary" onPress={backToMenu} />
       </View>
     );
   }
@@ -40,44 +57,163 @@ export function OrderSummaryScreen() {
   const isSubmitting = state.status === 'submitting';
 
   return (
-    <FlatList
-      data={cart.lines}
-      keyExtractor={(line) => line.product.id}
-      renderItem={({ item: line }) => (
-        <View>
-          <Text>{line.product.name}</Text>
-          <Text>
-            {line.quantity} × ${line.product.price.toFixed(2)}
-          </Text>
-          <Text>${getLineTotal(line).toFixed(2)}</Text>
-        </View>
-      )}
-      ListFooterComponent={
-        <View>
-          <Text>Items: {getItemCount(cart)}</Text>
-          <Text>Total: ${getTotal(cart).toFixed(2)}</Text>
-
-          {state.status === 'error' && (
-            <View accessible accessibilityRole="alert">
-              <Text>Couldn&apos;t submit your order. {state.message}</Text>
-              <Text>Your items are still in the order.</Text>
+    <View style={[styles.screen, { backgroundColor: colors.background }]}>
+      <FlatList
+        style={styles.list}
+        data={cart.lines}
+        keyExtractor={(line) => line.product.id}
+        renderItem={({ item: line }) => (
+          <View style={[styles.line, { borderBottomColor: colors.divider }]}>
+            <View style={styles.lineDetails}>
+              <Text style={[styles.lineName, { color: colors.foreground }]}>
+                {line.product.name}
+              </Text>
+              <Text style={[styles.lineQuantity, { color: colors.muted }]}>
+                {line.quantity} × ${line.product.price.toFixed(2)}
+              </Text>
             </View>
-          )}
+            <Text style={[styles.lineTotal, { color: colors.foreground }]}>
+              ${getLineTotal(line).toFixed(2)}
+            </Text>
+          </View>
+        )}
+        ListFooterComponent={
+          <View style={styles.totals}>
+            <Text style={[styles.itemCount, { color: colors.muted }]}>
+              Items: {getItemCount(cart)}
+            </Text>
+            <Text style={[styles.total, { color: colors.foreground }]}>
+              Total: ${getTotal(cart).toFixed(2)}
+            </Text>
+          </View>
+        }
+      />
 
-          {isSubmitting ? (
-            <View>
-              <ActivityIndicator accessibilityLabel="Submitting order" />
-              <Text>Submitting your order…</Text>
-            </View>
-          ) : null}
+      <SafeAreaView
+        edges={['bottom']}
+        style={[styles.footer, { borderTopColor: colors.divider, backgroundColor: colors.background }]}
+      >
+        {state.status === 'error' && (
+          <View accessible accessibilityRole="alert">
+            <Text style={[styles.error, { color: colors.danger }]}>
+              Couldn&apos;t submit your order. {state.message}
+            </Text>
+            <Text style={[styles.error, { color: colors.danger }]}>
+              Your items are still in the order.
+            </Text>
+          </View>
+        )}
 
-          <Button
-            title={state.status === 'error' ? 'Try again' : 'Submit order'}
-            disabled={isSubmitting}
-            onPress={() => void submit()}
-          />
-        </View>
-      }
-    />
+        {isSubmitting ? (
+          <View style={styles.loading}>
+            <ActivityIndicator color={colors.muted} accessibilityLabel="Submitting order" />
+            <Text style={[styles.loadingText, { color: colors.muted }]}>
+              Submitting your order…
+            </Text>
+          </View>
+        ) : null}
+
+        <Button
+          title={state.status === 'error' ? 'Try again' : 'Submit order'}
+          variant="primary"
+          fullWidth
+          disabled={isSubmitting}
+          onPress={() => void submit()}
+        />
+      </SafeAreaView>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+  },
+  page: {
+    flex: 1,
+    alignItems: 'flex-start',
+    paddingHorizontal: spacing.page,
+    paddingTop: spacing.page * 2,
+  },
+  title: {
+    fontSize: fontSize['2xl'],
+    fontWeight: '600',
+  },
+  description: {
+    marginTop: spacing.sm,
+    marginBottom: spacing.page,
+    fontSize: fontSize.base,
+  },
+  details: {
+    alignSelf: 'stretch',
+    marginBottom: spacing.page,
+  },
+  label: {
+    marginTop: spacing.sm,
+    fontSize: fontSize.sm,
+  },
+  value: {
+    fontSize: fontSize.base,
+    fontWeight: '500',
+  },
+  list: {
+    flex: 1,
+  },
+  line: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    paddingHorizontal: spacing.page,
+    paddingVertical: spacing.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  lineDetails: {
+    flex: 1,
+    gap: 2,
+  },
+  lineName: {
+    fontSize: fontSize.base,
+    fontWeight: '500',
+  },
+  lineQuantity: {
+    fontSize: fontSize.sm,
+    fontVariant: ['tabular-nums'],
+  },
+  lineTotal: {
+    fontSize: fontSize.base,
+    fontWeight: '500',
+    fontVariant: ['tabular-nums'],
+  },
+  totals: {
+    alignItems: 'flex-end',
+    gap: spacing.xs,
+    paddingHorizontal: spacing.page,
+    paddingVertical: spacing.lg,
+  },
+  itemCount: {
+    fontSize: fontSize.sm,
+  },
+  total: {
+    fontSize: fontSize.xl,
+    fontWeight: '600',
+    fontVariant: ['tabular-nums'],
+  },
+  footer: {
+    gap: spacing.md,
+    paddingHorizontal: spacing.page,
+    paddingVertical: spacing.md,
+    borderTopWidth: StyleSheet.hairlineWidth,
+  },
+  error: {
+    fontSize: fontSize.sm,
+  },
+  loading: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+  },
+  loadingText: {
+    fontSize: fontSize.sm,
+  },
+});

@@ -137,8 +137,8 @@ describe('<OrderSummaryScreen />', () => {
       expect(
         screen.getByRole('header', { name: 'Order placed!' }),
       ).toBeOnTheScreen();
-      expect(screen.getByText('Order number: ORD-TEST1')).toBeOnTheScreen();
-      expect(screen.getByText('4 items · Total: $3.50')).toBeOnTheScreen();
+      expect(screen.getByText('ORD-TEST1')).toBeOnTheScreen();
+      expect(screen.getByText('$3.50 · 4 items')).toBeOnTheScreen();
       expect(screen.queryByText('Apple')).not.toBeOnTheScreen();
       expect(screen.queryByLabelText('Submitting order')).not.toBeOnTheScreen();
     });
