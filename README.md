@@ -1,6 +1,6 @@
 # pos-order
 
-Expo (React Native) app using Expo Router. Screens live in `src/app/`.
+A school canteen point-of-sale app built with Expo (React Native) and Expo Router. Staff browse the menu by category, build an order, review it and submit it to a mocked API.
 
 ```bash
 npm install
@@ -9,6 +9,28 @@ npx expo lint    # lint
 npx tsc --noEmit # typecheck
 npm test         # run tests (npm run test:watch to re-run on change)
 ```
+
+## Design decisions
+
+- I used Expo with Expo Router (SDK 57), because it runs in Expo Go and provides hot reloading. File-based routing is a similar approach that I've taken in the order-dashboard app, to keep similar dev and user experience
+- Code is grouped by feature to keep its logic, components and tests together. `src/app/` only holds routes, and each route is a one-line re-export of a screen from `src/features`.
+- Expo Router treats every file in `src/app/` as a screen
+
+- For cart state I used `useReducer` + React context rather than any state management - at this stage I decided to keep the state handling minimal.
+- Prices stay in dollars to match the data, but totals are added up in whole cents. That avoids floating-point drift (`0.1 + 0.2`) in order totals
+
+- As in the dashboard, for the same reasons I didn't bring in a component library. I wrote small `Button` and `Chip` components on top of `Pressable` and `StyleSheet`.
+- The layout suits quick use at a counter: category pills in one horizontally scrolling row, and a bottom bar that stays in place with the running total and "Review order".
+- Testing uses Jest (`jest-expo`) and React Native Testing Library.
+
+What would I do next if I had more time ?
+
+- Add the optional search feature
+- Focus more on tablet experience as probably tablet is a preferred device in school cantines
+- I'd work more on timeouts and retries as this might be the biggest pain point in such apps (I suppose)
+- persist the cart across app restarts with AsyncStorage and add order history
+
+// All the content below was created during developing the app for my documenting purposes (and potentially future me coming back to this code in some time), but feel free to take a look!
 
 ## Mock product data
 
@@ -52,8 +74,7 @@ The order summary:
 - `src/features/order/order-summary-screen.test.tsx`: lines with quantity × price and line totals, item count and total, and every submit state (empty, loading, success, error, retry). The API is mocked with a promise the test settles by hand, so the loading state can be checked mid-request.
 - `src/features/order/submit-order.test.ts`: the mock API's delay and empty-order rejection, using fake timers.
 - `src/features/order/use-submit-order.test.tsx`: the submit hook, including a double tap that arrives before the button re-renders as disabled.
-- `src/features/order/components/order-header-button.test.tsx`: header button label and count, disabled when empty, navigates to `/summary`.
-- `src/features/order/order-flow.test.tsx`: boots the real routes (with the provider and header button from `_layout.tsx`), adds items, opens the summary from both "Review order" and the header button, submits, and starts a new order.
+- `src/features/order/order-flow.test.tsx`: boots the real routes (with the provider from `_layout.tsx`), adds items, opens the summary with "Review order", submits, and starts a new order.
 
 Shared UI components:
 
@@ -66,18 +87,20 @@ Shared UI components:
 
 The cart lives in `CartProvider` (`src/features/cart/cart-context.tsx`), wrapped around the app in `src/app/_layout.tsx`. Screens read it with `useCart()`, so the order screen (`/order`) and the summary (`/summary`) share the same cart. The state logic is still the plain reducer in `cart-reducer.ts`.
 
-The "Order" button in the order screen's header (`src/features/order/components/order-header-button.tsx`, set as `headerRight` in `_layout.tsx`) and "Review order" in the list both open the summary, which lists each item with quantity × price, its line total, and the order total. Both are disabled while the cart is empty, and the header button shows the item count, e.g. "Order (3)".
+"Review order" in the order screen's bottom bar opens the summary, which lists each item with quantity × price, its line total, and the order total. It is disabled while the cart is empty.
 
 ## Submitting an order
 
-`submitOrder` (`src/features/order/submit-order.ts`) is a mocked API: it waits about 1.5 s, then returns a confirmation. It rejects an empty order. `useSubmitOrder` (`use-submit-order.ts`) tracks `idle → submitting → success | error`, blocks a second submit while one is in flight, and clears the cart only on success.
+`submitOrder` (`src/features/order/submit-order.ts`) is a mocked API: it waits about 1.5 s, then returns a confirmation. It rejects an empty order. With `simulateFailure: true` it fails after the same delay instead. `useSubmitOrder` (`use-submit-order.ts`) tracks `idle → submitting → success | error`, blocks a second submit while one is in flight, and clears the cart only on success.
 
 The summary screen shows:
 
-| State | Shows |
-|---|---|
-| Empty | "Your order is empty." and "Back to menu". No submit button. |
-| Ready | Items, totals, "Submit order". |
-| Loading | Spinner, "Submitting your order…", button disabled. |
-| Error | The failure message as an accessibility alert, items kept, "Try again". |
+| State   | Shows                                                                                             |
+| ------- | ------------------------------------------------------------------------------------------------- |
+| Empty   | "Your order is empty." and "Back to menu". No submit button.                                      |
+| Ready   | Items, totals, "Submit order".                                                                    |
+| Loading | Spinner, "Submitting your order…", button disabled.                                               |
+| Error   | The failure message as an accessibility alert, items kept, "Try again".                           |
 | Success | "Order placed!", order number and total, "Start new order" (back to the menu with an empty cart). |
+
+To exercise the failed request, turn on the "Simulate failed request" switch above the submit button. The button turns red and reads "Submit order failed". Submitting then fails after the normal delay and shows the error state. Turning the switch off removes the error message and brings back the normal "Submit order" button. The items stay in the order. The switch is disabled while a request is in flight.
